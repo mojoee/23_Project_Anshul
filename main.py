@@ -16,29 +16,26 @@ def main():
 
     # Feel free to change these and experiment !!
     config = wandb.config
-    config.learning_rate = 2e-5
+    config.learning_rate = 2e-3
     config.batch_size = 32
     config.input_size = 1
-    config.output_size = 2
-    config.hidden_size = 256
-    config.embedding_length = 300
-    config.epochs = 10
-    mode="train"
+    config.output_size = 1
+    config.hidden_size = 32
+    config.mode = "train"
+    config.epochs = 20
 
+    train_iter, valid_iter, test_iter = load_dataset(config)
 
-    train_iter, valid_iter, test_iter = load_dataset()
-
-    if mode=="train":
+    if config.mode=="train":
         model = LSTMRegressor(config.batch_size, config.input_size, config.output_size, config.hidden_size)
         loss_fn = F.l1_loss
-
 
         wandb.watch(model)
 
         for epoch in range(config.epochs):
             train_loss, train_acc = train_model(model, train_iter, epoch, loss_fn)
-            wandb.log({"Training Loss": train_loss})
-            wandb.log({"Training Acc": train_acc})
+            #wandb.log({"Training Loss": train_loss})
+            #wandb.log({"Training Acc": train_acc})
             val_loss, val_acc = eval_model(model, valid_iter, loss_fn)
             wandb.log({"Validation Loss": val_loss})
             wandb.log({"Validation Accuracy": val_acc})

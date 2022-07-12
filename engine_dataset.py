@@ -43,7 +43,7 @@ def create_dataset():
     dataset= EngineDataset(merged_data, device)
     return dataset
 
-def load_dataset(test_sen=None, test_split=0.2, val_split=0.2):
+def load_dataset(config, test_sen=None, test_split=0.2, val_split=0.2):
  
     dataset=create_dataset() 
     dataset_size=len(dataset)
@@ -51,8 +51,8 @@ def load_dataset(test_sen=None, test_split=0.2, val_split=0.2):
     val_size = int(val_split * dataset_size)
     train_size = dataset_size - test_size -val_size 
     train_data, valid_data, test_data = T.utils.data.random_split(dataset, [train_size, val_size, test_size], generator=T.Generator().manual_seed(42))
-    train_iter = DataLoader(train_data, batch_size=8, shuffle=True, num_workers=0)
-    valid_iter = DataLoader(valid_data, batch_size=8, shuffle=True, num_workers=0)
-    test_iter = DataLoader( test_data, batch_size=8, shuffle=True, num_workers=0)
+    train_iter = DataLoader(train_data, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    valid_iter = DataLoader(valid_data, batch_size=config.batch_size, shuffle=True, num_workers=0)
+    test_iter = DataLoader( test_data, batch_size=config.batch_size, shuffle=True, num_workers=0)
 
     return train_iter, valid_iter, test_iter

@@ -15,32 +15,32 @@ def train_model(model, train_iter, epoch, loss_fn):
     optim = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()))
     steps = 0
     model.train()
+    batch_size=32
     for idx, batch in enumerate(train_iter):
         input = batch[0]
         target = batch[1]
+        if len(input)!=batch_size:
+            continue
         #target = torch.autograd.Variable(target).long()
         if torch.cuda.is_available():
             input = input.cuda()
             target = target.cuda()
-        if (input.size()[0] is not 32): 
-            continue
         optim.zero_grad()
         prediction = model(input)
         loss = loss_fn(prediction, target)
         wandb.log({"Training Loss": loss.item()})
-        num_corrects = (torch.max(prediction, 1)[1].view(target.size()).data == target.data).float().sum()
-        acc = 100.0 * num_corrects/len(batch)
-        wandb.log({"Training Accuracy": acc.item()})
+        #num_corrects = (torch.max(prediction, 1)[1].view(target.size()).data == target.data).float().sum()
+        #acc = 100.0 * num_corrects/len(batch)
+        #wandb.log({"Training Accuracy": acc.item()})
         loss.backward()
         clip_gradient(model, 1e-1)
         optim.step()
         steps += 1
         
         if steps % 100 == 0:
-            print (f'Epoch: {epoch+1}, Idx: {idx+1}, Training Loss: {loss.item():.4f}, Training Accuracy: {acc.item(): .2f}%')
+            print (f'Epoch: {epoch+1}, Idx: {idx+1}, Training Loss: {loss.item():.4f}')
         
         total_epoch_loss += loss.item()
-        total_epoch_acc += acc.item()
         
     return total_epoch_loss/len(train_iter), total_epoch_acc/len(train_iter)
 
@@ -48,17 +48,18 @@ def eval_model(model, val_iter, loss_fn):
     total_epoch_loss = 0
     total_epoch_acc = 0
     model.eval()
+    batch_size=32
     with torch.no_grad():
         for idx, batch in enumerate(val_iter):
-            text = batch[0]
-            if (text.size()[0] is not 32):
+            input = batch[0]
+            if len(input)!=batch_size:
                 continue
             target = batch[1]
             target = torch.autograd.Variable(target).long()
             if torch.cuda.is_available():
-                text = text.cuda()
+                input = input.cuda()
                 target = target.cuda()
-            prediction = model(text)
+            prediction = model(input)
             loss = loss_fn(prediction, target)
             wandb.log({"Evaluation Loss": loss.item()})
             num_corrects = (torch.max(prediction, 1)[1].view(target.size()).data == target.data).sum()
