@@ -2,6 +2,7 @@ import numpy as np
 import torch as T
 import os
 from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms as TF
 
 class EngineDataset(T.utils.data.Dataset):
   # crank_angle  pressure   time  
@@ -24,6 +25,7 @@ class EngineDataset(T.utils.data.Dataset):
       dtype=T.float32).to(device)
     self.y_data = T.tensor(tmp_y, \
       dtype=T.float32).to(device)
+    self.transform = TF.Compose([TF.ToTensor()]) 
 
   def __len__(self):
     return len(self.x_data)
@@ -31,7 +33,8 @@ class EngineDataset(T.utils.data.Dataset):
   def __getitem__(self, idx):
     angle = self.x_data[idx,:]  # or just [idx]
     pressure = self.y_data[idx,:] 
-    return (angle, pressure)       # tuple of matrices
+    #output= TF.Compose([TF.ToTensor()]) 
+    return angle, pressure      # tuple of matrices
 
 
 def create_dataset():
@@ -48,7 +51,8 @@ def load_dataset(test_sen=None, test_split=0.2, val_split=0.2):
     val_size = int(val_split * dataset_size)
     train_size = dataset_size - test_size -val_size 
     train_data, valid_data, test_data = T.utils.data.random_split(dataset, [train_size, val_size, test_size], generator=T.Generator().manual_seed(42))
-    train_iter, valid_iter, test_iter = DataLoader((train_data, valid_data, test_data), batch_size=4,
-                            shuffle=True, num_workers=0)
+    train_iter = DataLoader(train_data, batch_size=8, shuffle=True, num_workers=0)
+    valid_iter = DataLoader(valid_data, batch_size=8, shuffle=True, num_workers=0)
+    test_iter = DataLoader( test_data, batch_size=8, shuffle=True, num_workers=0)
 
     return train_iter, valid_iter, test_iter

@@ -8,7 +8,7 @@ def clip_gradient(model, clip_value):
     for p in params:
         p.grad.data.clamp_(-clip_value, clip_value)
     
-def train_model(model, train_iter, epoch):
+def train_model(model, train_iter, epoch, loss_fn):
     total_epoch_loss = 0
     total_epoch_acc = 0
     model.cuda()
@@ -16,16 +16,16 @@ def train_model(model, train_iter, epoch):
     steps = 0
     model.train()
     for idx, batch in enumerate(train_iter):
-        text = batch.text[0]
-        target = batch.label
-        target = torch.autograd.Variable(target).long()
+        input = batch[0]
+        target = batch[1]
+        #target = torch.autograd.Variable(target).long()
         if torch.cuda.is_available():
-            text = text.cuda()
+            input = input.cuda()
             target = target.cuda()
-        if (text.size()[0] is not 32): 
+        if (input.size()[0] is not 32): 
             continue
         optim.zero_grad()
-        prediction = model(text)
+        prediction = model(input)
         loss = loss_fn(prediction, target)
         wandb.log({"Training Loss": loss.item()})
         num_corrects = (torch.max(prediction, 1)[1].view(target.size()).data == target.data).float().sum()
@@ -44,16 +44,16 @@ def train_model(model, train_iter, epoch):
         
     return total_epoch_loss/len(train_iter), total_epoch_acc/len(train_iter)
 
-def eval_model(model, val_iter):
+def eval_model(model, val_iter, loss_fn):
     total_epoch_loss = 0
     total_epoch_acc = 0
     model.eval()
     with torch.no_grad():
         for idx, batch in enumerate(val_iter):
-            text = batch.text[0]
+            text = batch[0]
             if (text.size()[0] is not 32):
                 continue
-            target = batch.label
+            target = batch[1]
             target = torch.autograd.Variable(target).long()
             if torch.cuda.is_available():
                 text = text.cuda()
