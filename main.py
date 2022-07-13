@@ -22,7 +22,7 @@ def main():
     config.output_size = 1
     config.hidden_size = 32
     config.mode = "train"
-    config.epochs = 20
+    config.epochs = 2000
 
     train_iter, valid_iter, test_iter = load_dataset(config)
 
