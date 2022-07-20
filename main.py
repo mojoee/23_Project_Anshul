@@ -2,7 +2,7 @@ import torch as T
 import os
 import wandb
 import torch.nn.functional as F
-from LSTM_engine import LSTM
+from Models import LSTM, DNN
 from train import train_model, eval_model, test_model
 from engine_dataset import load_dataset
 
@@ -15,7 +15,7 @@ def create_config(experiment_name):
     config.output_size = 1
     config.hidden_size = 32
     config.mode = "train"
-    config.epochs = 1
+    config.epochs = 10
     config.seq_length = 16
     config.num_classes = 1
     config.layers=1
@@ -34,11 +34,11 @@ def main():
     train_iter, valid_iter, test_iter, scaler = load_dataset(config)
 
     if config.mode=="train":
-        model = LSTM(config.num_classes, config.input_size, config.hidden_size,\
-              config.layers, config.seq_length)
+        #model = LSTM(config.num_classes, config.input_size, config.hidden_size,\
+        #      config.layers, config.seq_length)
+        model = DNN(config.seq_length)
         loss_fn = F.l1_loss
         #loss_fn = F.mse_loss
-
 
         wandb.watch(model)
         if T.cuda.is_available():
